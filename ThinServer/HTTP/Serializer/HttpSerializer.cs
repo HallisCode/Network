@@ -22,37 +22,35 @@ namespace ThinServer.HTTP
         {
             IHttpObject httpObject;
 
-            HttpRaw httpRaw = new HttpRaw(_SerializeToString(data));
+            HttpRaw httpRaw = _UnbundleHttp(Encoding.UTF8.GetString(data));
 
-            HttpStartLine startLine = _GetStartLine(httpRaw);
-            Dictionary<string, string> headers = _GetHeaders(httpRaw);
-            byte[] body = _GetBody(httpRaw);
+            HttpStartLine startLine = _ParseStartLine(httpRaw);
+            Dictionary<string, string> headers = _ParseHeaders(httpRaw);
+            byte[] body = httpRaw.Body;
 
-            bool isRequest;
-            if (startLine.Argument1.ToLower().StartsWith("http"))
+            bool isRequest = startLine.Argument1.ToLower().StartsWith("http");
+            if (isRequest)
             {
-                isRequest = false;
-                HttpResponseLine httpResponseLine = _GetResponseLine(startLine);
-
-                httpObject = HttpObject.CreateResponse
-                (
-                    protocol: httpResponseLine.Protocol,
-                    code: httpResponseLine.Code,
-                    message: httpResponseLine.Message,
-                    headers: headers,
-                    body: body
-                );
-            }
-            else
-            {
-                isRequest = true;
-                HttpRequestLine httpRequestLine = _GetRequestLine(startLine);
+                HttpRequestLine httpRequestLine = _ParseRequestLine(startLine);
 
                 httpObject = HttpObject.CreateRequest
                 (
                     method: httpRequestLine.Method,
                     url: httpRequestLine.URL,
                     protocol: httpRequestLine.Protocol,
+                    headers: headers,
+                    body: body
+                );
+            }
+            else
+            {
+                HttpResponseLine httpResponseLine = _ParseResponseLine(startLine);
+
+                httpObject = HttpObject.CreateResponse
+                (
+                    protocol: httpResponseLine.Protocol,
+                    code: httpResponseLine.Code,
+                    message: httpResponseLine.Message,
                     headers: headers,
                     body: body
                 );
@@ -93,7 +91,13 @@ namespace ThinServer.HTTP
             return httpBuilder.ToString();
         }
 
-        private HttpRequestLine _GetRequestLine(HttpStartLine startLine)
+        /// <summary>
+        /// Парсит стартовую строку http, с расчётом что это http request.
+        /// </summary>
+        /// <param name="startLine"></param>
+        /// <returns></returns>
+        /// <exception cref="SerializationException"></exception>
+        private HttpRequestLine _ParseRequestLine(HttpStartLine startLine)
         {
             HttpMethod method;
             string url;
@@ -120,7 +124,13 @@ namespace ThinServer.HTTP
             return new HttpRequestLine(method, url, protocol);
         }
 
-        private HttpResponseLine _GetResponseLine(HttpStartLine startLine)
+        /// <summary>
+        /// Парсит стартовую строку http, с расчётом что это http response.
+        /// </summary>
+        /// <param name="startLine"></param>
+        /// <returns></returns>
+        /// <exception cref="SerializationException"></exception>
+        private HttpResponseLine _ParseResponseLine(HttpStartLine startLine)
         {
             HttpProtocol protocol;
             HttpStatusCode code;
@@ -152,20 +162,74 @@ namespace ThinServer.HTTP
             return new HttpResponseLine(protocol, code, message);
         }
 
-        private HttpStartLine _GetStartLine(HttpRaw httpRaw)
+        /// <summary>
+        /// Разбивает http запрос на части : startLine, headers, body.
+        /// </summary>
+        /// <param name="http">Http в строковом представлении.</param>
+        /// <returns></returns>
+        private HttpRaw _UnbundleHttp(string http)
         {
-            string startLine = httpRaw.Http.Split(Environment.NewLine, 2)[0];
+            string startLine;
+            string? headers = null;
+            byte[]? body = null;
 
-            return new HttpStartLine(startLine);
+            int indexEndStartLine = http.IndexOf(Environment.NewLine);
+            if (indexEndStartLine < 0)
+            {
+                throw new SerializationException($"Невозможно найти конец стартовой строки запроса http.");
+            }
+
+            int lengthStartLine = indexEndStartLine - 1;
+            startLine = http.Substring(0, lengthStartLine);
+
+
+            int indexEndHeaders = http.IndexOf(Environment.NewLine + Environment.NewLine);
+            if (indexEndHeaders < 0)
+            {
+                headers = null;
+            }
+
+            int lengthHeaders = indexEndHeaders - lengthStartLine - 1;
+            headers = http.Substring(indexEndStartLine + 1, lengthHeaders);
+
+            string otherData = http.Substring(indexEndHeaders + 1, http.Length - indexEndHeaders + 1);
+            if (string.IsNullOrWhiteSpace(otherData) is false)
+            {
+                body = _SerializeToBytes(otherData);
+            }
+            
+            return new HttpRaw(startLine, headers, body);
         }
 
-        private Dictionary<string, string> _GetHeaders(HttpRaw httpRaw)
+        /// <summary>
+        /// Разбивает стартовую строку http на аргументы.
+        /// </summary>
+        /// <param name="httpRaw"></param>
+        /// <returns></returns>
+        /// <exception cref="SerializationException"></exception>
+        private HttpStartLine _ParseStartLine(HttpRaw httpRaw)
         {
-            string headPart = httpRaw.Http.Split(Environment.NewLine + Environment.NewLine, 2)[0];
-            string[] headers = headPart.Split(Environment.NewLine, 2)[1].Split(Environment.NewLine);
+            string[] arguments = httpRaw.StartLine.Split(' ');
+            if (arguments.Length != 3)
+            {
+                throw new SerializationException($"Неккоректная длина строки запроса http {arguments.Length}/3");
+            }
+
+            return new HttpStartLine(arguments[0], arguments[1], arguments[2]);
+        }
+
+        /// <summary>
+        /// Парсит headers и переводит их в словарь.
+        /// </summary>
+        /// <param name="httpRaw"></param>
+        /// <returns>Словарь с заголовками http.</returns>
+        private Dictionary<string, string>? _ParseHeaders(HttpRaw httpRaw)
+        {
+            if (string.IsNullOrWhiteSpace(httpRaw.Headers)) return null;
+
+            string[] headers = httpRaw.Headers.Split(Environment.NewLine, 2)[1].Split(Environment.NewLine);
 
             Dictionary<string, string> _headers = new Dictionary<string, string>();
-
             foreach (string head in headers)
             {
                 string[] keyValue = head.Split(':', 2);
@@ -176,13 +240,6 @@ namespace ThinServer.HTTP
             }
 
             return _headers;
-        }
-
-        private byte[] _GetBody(HttpRaw httpRaw)
-        {
-            string body = httpRaw.Http.Split(Environment.NewLine + Environment.NewLine, 2)[1];
-
-            return _SerializeToBytes(body);
         }
 
         private string _SerializeToString(IEnumerable<byte> data)
@@ -196,11 +253,6 @@ namespace ThinServer.HTTP
         }
 
         /// <summary>
-        /// Представляет сырой запрос http в строковом формате.
-        /// </summary>
-        public record HttpRaw(string Http);
-
-        /// <summary>
         /// Представляет строку запроса http request.
         /// </summary>
         public record HttpRequestLine(HttpMethod Method, string URL, HttpProtocol Protocol);
@@ -211,30 +263,14 @@ namespace ThinServer.HTTP
         public record HttpResponseLine(HttpProtocol Protocol, HttpStatusCode Code, string Message);
 
         /// <summary>
+        /// Представляет сырой запрос http разбитый на секции.
+        /// </summary>
+        public record HttpRaw(string StartLine, string? Headers, byte[]? Body);
+
+        /// <summary>
         /// Представляет сырую стартовую строку разбитую на аргументы.
         /// </summary>
-        public record HttpStartLine
-        {
-            public string Argument1 { get; init; }
-            public string Argument2 { get; init; }
-            public string Argument3 { get; init; }
-
-            public HttpStartLine(string line)
-            {
-                string[] lineArguments = line.Split(' ');
-
-                if (lineArguments.Length != 3)
-                {
-                    throw new HttpSerializerException(
-                        $"Неккоректное количество элементов в строке http запроса {lineArguments.Length}."
-                    );
-                }
-
-                Argument1 = lineArguments[0];
-                Argument2 = lineArguments[1];
-                Argument3 = lineArguments[2];
-            }
-        }
+        public record HttpStartLine(string Argument1, string Argument2, string Argument3);
     }
 
     public class HttpSerializerException : Exception
