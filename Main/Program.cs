@@ -15,51 +15,8 @@ namespace Main
     {
         public static async Task Main(string[] args)
         {
-            // IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
-            //
-            // IPEndPoint endPoint = new IPEndPoint(ipAddress, 8080);
-            //
-            // TimeSpan awaitNewData = new TimeSpan(0, 0, 0, 0, 256);
-            //
-            //
-            // TcpListener listener = new TcpListener(endPoint);
-            // listener.Start();
-            //
-            // while (true)
-            // {
-            //     ITcpClient client = await listener.AcceptTcpClientAsync();
-            //     NetworkStream stream = client.GetStream();
-            //
-            //     Task.Run(async () =>
-            //     {
-            //         try
-            //         {
-            //             await Handle(stream);
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             Console.WriteLine(e);
-            //         }
-            //         finally
-            //         {
-            //             stream.Close();
-            //             client.Close();
-            //         }
-            //     });
-            // }
 
-            string request = "GET /index.html HTTP/1.1\n" +
-                             "Host: www.example.com\n" +
-                             "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\n" +
-                             "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\n" +
-                             "Accept-Language: en-US,en;q=0.5\n" +
-                             "Connection: keep-alive\n";
-
-            IHttpSerializer httpSerializer = new HttpSerializer();
-
-            IHttpObject httpObject = httpSerializer.ToObject(Encoding.UTF8.GetBytes(request));
-
-            string http = httpSerializer.ToHttp(httpObject);
+            
         }
 
         public static async Task Handle(NetworkStream stream)
