@@ -16,19 +16,14 @@ namespace ThinServer.TCP
         int Available { get; }
 
         /// <summary>
-        /// Сокет на котором работает  клиент.
-        /// </summary>
-        Socket? Client { get; }
-
-        /// <summary>
         /// Еднпоинт на котором работает сокет.
         /// </summary>
-        IPEndPoint LocalEndpoint { get; }
+        IPEndPoint? LocalEndpoint { get; }
 
         /// <summary>
         /// Ендпоинт с которым должно быть соединение.
         /// </summary>
-        IPEndPoint RemoteEndPoint { get; }
+        IPEndPoint? RemoteEndPoint { get; }
 
         /// <summary>
         /// Размер буфера в байтах на входящие данные.

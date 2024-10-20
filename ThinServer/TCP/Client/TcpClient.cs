@@ -7,11 +7,8 @@ namespace ThinServer.TCP
     {
         // Private properties
         private IPEndPoint? _localEndpoint;
-
         private IPEndPoint? _RemoteEndpoint;
-
         private Socket? _client;
-
         private bool _disposed;
 
 
@@ -24,11 +21,6 @@ namespace ThinServer.TCP
         public int Available
         {
             get => _client.Available;
-        }
-
-        public Socket? Client
-        {
-            get => _client;
         }
 
         public IPEndPoint? LocalEndpoint
@@ -77,41 +69,46 @@ namespace ThinServer.TCP
             await _client.ConnectAsync(hostname, port);
         }
 
-        public int Receive(byte[] buffer)
-        {
-            return _client.Receive(buffer);
-        }
-
-        public int Receive(byte[] buffer, int offset, int size, SocketFlags socketFlags = SocketFlags.None)
-        {
-            return _client.Receive(buffer, offset, size, socketFlags);
-        }
-
-        public async Task<int> ReceiveAsync(byte[] buffer)
-        {
-            return await _client.ReceiveAsync(buffer);
-        }
-
-        public NetworkStream GetStream()
-        {
-            if (Connected is false)
-            {
-                throw new Exception("The connection was not established");
-            }
-
-            return new NetworkStream(this._client);
-        }
-
         public void Stop()
         {
             _client.Disconnect(true);
         }
 
-        public void Close()
+        public int Receive(byte[] buffer)
         {
-            _client.Close();
+            _VerifyActiveConnected();
+
+            return _client.Receive(buffer);
         }
 
+        public int Receive(byte[] buffer, int offset, int size, SocketFlags socketFlags = SocketFlags.None)
+        {
+            _VerifyActiveConnected();
+
+            return _client.Receive(buffer, offset, size, socketFlags);
+        }
+
+        public async Task<int> ReceiveAsync(byte[] buffer)
+        {
+            _VerifyActiveConnected();
+
+            return await _client.ReceiveAsync(buffer);
+        }
+
+        public NetworkStream GetStream()
+        {
+            _VerifyActiveConnected();
+
+            return new NetworkStream(this._client);
+        }
+
+        private void _VerifyActiveConnected()
+        {
+            if (Connected is false)
+            {
+                throw new Exception("The connection was not established");
+            }
+        }
 
         private void InitializeClientSocket()
         {
@@ -123,11 +120,6 @@ namespace ThinServer.TCP
             _client = new Socket(_localEndpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         }
 
-
-        ~TcpClient()
-        {
-            this.Dispose(false);
-        }
 
         protected virtual void Dispose(bool disposing)
         {
@@ -149,6 +141,16 @@ namespace ThinServer.TCP
             this.Dispose(true);
 
             GC.SuppressFinalize(this);
+        }
+
+        public void Close()
+        {
+            _client.Close();
+        }
+
+        ~TcpClient()
+        {
+            this.Dispose(false);
         }
     }
 

@@ -14,31 +14,14 @@ namespace ThinServer.TCP
         IPEndPoint LocalEndpoint { get; }
 
         /// <summary>
-        /// Сокет на котором работает сервер.
-        /// </summary>
-        Socket Server { get; }
-
-        /// <summary>
         /// Слушает ли сервер входящие соединения.
         /// </summary>
         bool Active { get; }
 
         /// <summary>
-        /// Запуск прослушивания сокета.
+        /// Запуск прослушивания ендпойнта.
         /// </summary>
         void Start();
-
-        /// <summary>
-        /// Принимает входящее соединение.
-        /// </summary>
-        /// <returns></returns>
-        Socket AcceptSocket();
-
-        /// <summary>
-        /// Принимает входящее соединение.
-        /// </summary>
-        /// <returns></returns>
-        Task<Socket> AcceptSocketAsync();
 
         /// <summary>
         /// Принимает входящее соединение.
@@ -53,12 +36,12 @@ namespace ThinServer.TCP
         Task<ITcpClient> AcceptTcpClientAsync();
 
         /// <summary>
-        /// Прекращение прослушивания сокета.
+        /// Прекращение прослушивания ендпойнта.
         /// </summary>
         void Stop();
 
         /// <summary>
-        /// Прекращение прослушивания сокета и освобождение ресурсов.
+        /// Прекращение прослушивания ендпойнта и освобождение ресурсов.
         /// </summary>
         void Close();
     }

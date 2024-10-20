@@ -7,21 +7,15 @@ namespace ThinServer.TCP
     {
         // Private properties
         private Socket? _serverSocket;
-
         private IPEndPoint? _localEndpoint;
-
         private bool _active;
-
         private bool _disposed;
-
 
         // Public properties
         public IPEndPoint LocalEndpoint
         {
             get => (_active) ? (IPEndPoint)_serverSocket.LocalEndPoint : _localEndpoint;
         }
-
-        public Socket Server { get; }
 
         public bool Active
         {
@@ -37,7 +31,7 @@ namespace ThinServer.TCP
         {
             _localEndpoint = endPoint;
 
-            InitializeServerSocket();
+            _InitializeServerSocket();
         }
 
 
@@ -63,49 +57,21 @@ namespace ThinServer.TCP
             _active = false;
         }
 
-        /// <summary>
-        /// Принимает входящее соединение.
-        /// </summary>
-        /// <returns></returns>
-        public Socket AcceptSocket()
-        {
-            VerifyActiveOnState();
-
-            return _serverSocket.Accept();
-        }
-
-        /// <summary>
-        /// Принимает входящее соединение.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<Socket> AcceptSocketAsync()
-        {
-            VerifyActiveOnState();
-
-            return await _serverSocket.AcceptAsync();
-        }
-
         public ITcpClient AcceptTcpClient()
         {
-            VerifyActiveOnState();
+            _VerifyActiveOnState();
 
-            return new TcpClient(AcceptSocket());
+            return new TcpClient(_serverSocket.Accept());
         }
 
         public async Task<ITcpClient> AcceptTcpClientAsync()
         {
-            VerifyActiveOnState();
+            _VerifyActiveOnState();
 
-            return new TcpClient(await AcceptSocketAsync());
+            return new TcpClient(await _serverSocket.AcceptAsync());
         }
 
-        public void Close()
-        {
-            Dispose();
-        }
-
-
-        private void VerifyActiveOnState()
+        private void _VerifyActiveOnState()
         {
             if (_active == false)
             {
@@ -113,19 +79,12 @@ namespace ThinServer.TCP
             }
         }
 
-
-        private void InitializeServerSocket()
+        private void _InitializeServerSocket()
         {
             if (_localEndpoint is null)
                 throw new TcpListenerException("LocalEndpoint not defined.");
 
             _serverSocket = new Socket(_localEndpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        }
-
-
-        ~TcpListener()
-        {
-            this.Dispose(false);
         }
 
 
@@ -151,6 +110,16 @@ namespace ThinServer.TCP
             this.Dispose(true);
 
             GC.SuppressFinalize(this);
+        }
+
+        public void Close()
+        {
+            Dispose();
+        }
+
+        ~TcpListener()
+        {
+            this.Dispose(false);
         }
     }
 
