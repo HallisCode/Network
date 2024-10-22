@@ -235,7 +235,7 @@ namespace ThinServer.HTTP
         {
             if (string.IsNullOrWhiteSpace(httpRaw.Headers)) return null;
 
-            string[] headers = httpRaw.Headers.Split(Environment.NewLine, 2)[1].Split(Environment.NewLine);
+            string[] headers = httpRaw.Headers.Split(Environment.NewLine);
 
             Dictionary<string, string> _headers = new Dictionary<string, string>();
             foreach (string head in headers)

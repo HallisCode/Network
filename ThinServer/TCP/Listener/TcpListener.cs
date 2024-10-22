@@ -14,7 +14,7 @@ namespace ThinServer.TCP
         // Public properties
         public IPEndPoint LocalEndpoint
         {
-            get => (_active) ? (IPEndPoint)_serverSocket.LocalEndPoint : _localEndpoint;
+            get => _localEndpoint ?? (IPEndPoint)_serverSocket.LocalEndPoint;
         }
 
         public bool Active
@@ -31,6 +31,14 @@ namespace ThinServer.TCP
         {
             _localEndpoint = endPoint;
 
+            _InitializeServerSocket();
+        }
+
+        /// <summary>
+        /// Инициализирует нового слушателя TCP.
+        /// </summary>
+        public TcpListener()
+        {
             _InitializeServerSocket();
         }
 
@@ -82,7 +90,11 @@ namespace ThinServer.TCP
         private void _InitializeServerSocket()
         {
             if (_localEndpoint is null)
-                throw new TcpListenerException("LocalEndpoint not defined.");
+            {
+                _serverSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
+                return;
+            }
 
             _serverSocket = new Socket(_localEndpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         }

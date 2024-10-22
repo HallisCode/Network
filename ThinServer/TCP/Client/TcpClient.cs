@@ -5,14 +5,23 @@ namespace ThinServer.TCP
 {
     public class TcpClient : ITcpClient
     {
-        // Private properties
-        private IPEndPoint? _localEndpoint;
-        private IPEndPoint? _RemoteEndpoint;
-        private Socket? _client;
-        private bool _disposed;
-
-
         // Public properties
+        public NetworkStream Stream
+        {
+            get
+            {
+                _VerifyActiveConnected();
+
+                if (_stream is null)
+                {
+                    
+                    _stream = new NetworkStream(_client);
+                }
+
+                return _stream;
+            }
+        }
+
         public bool Connected
         {
             get => _client != null && _client.Connected;
@@ -45,6 +54,13 @@ namespace ThinServer.TCP
             set { _client.SendBufferSize = value; }
         }
 
+        // Private properties
+        private IPEndPoint? _localEndpoint;
+        private IPEndPoint? _RemoteEndpoint;
+        private Socket? _client;
+        private NetworkStream _stream;
+        private bool _disposed;
+
 
         public TcpClient(Socket socket)
         {
@@ -69,37 +85,12 @@ namespace ThinServer.TCP
             await _client.ConnectAsync(hostname, port);
         }
 
-        public void Stop()
+        public void Disconnect()
         {
+            _stream.Dispose();
             _client.Disconnect(true);
-        }
 
-        public int Receive(byte[] buffer)
-        {
-            _VerifyActiveConnected();
-
-            return _client.Receive(buffer);
-        }
-
-        public int Receive(byte[] buffer, int offset, int size, SocketFlags socketFlags = SocketFlags.None)
-        {
-            _VerifyActiveConnected();
-
-            return _client.Receive(buffer, offset, size, socketFlags);
-        }
-
-        public async Task<int> ReceiveAsync(byte[] buffer)
-        {
-            _VerifyActiveConnected();
-
-            return await _client.ReceiveAsync(buffer);
-        }
-
-        public NetworkStream GetStream()
-        {
-            _VerifyActiveConnected();
-
-            return new NetworkStream(this._client);
+            _stream = null;
         }
 
         private void _VerifyActiveConnected()
@@ -114,7 +105,8 @@ namespace ThinServer.TCP
         {
             if (_localEndpoint is null)
             {
-                throw new TcpClientException("LocalEndpoint not defined.");
+                _client = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                return;
             }
 
             _client = new Socket(_localEndpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -130,6 +122,7 @@ namespace ThinServer.TCP
 
             if (disposing)
             {
+                _stream.Dispose();
                 _client.Dispose();
             }
 
@@ -145,7 +138,7 @@ namespace ThinServer.TCP
 
         public void Close()
         {
-            _client.Close();
+            Dispose();
         }
 
         ~TcpClient()

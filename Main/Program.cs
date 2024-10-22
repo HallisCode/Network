@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ThinServer.HTTP;
 using ThinServer.TCP;
+using HttpListener = System.Net.HttpListener;
 using TcpListener = ThinServer.TCP.TcpListener;
 
 namespace Main
@@ -16,7 +17,6 @@ namespace Main
         public static async Task Main(string[] args)
         {
 
-            
         }
 
         public static async Task Handle(NetworkStream stream)

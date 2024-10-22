@@ -6,6 +6,11 @@ namespace ThinServer.TCP
     public interface ITcpClient : IDisposable
     {
         /// <summary>
+        /// Поток текущего соединения для передачи данных.
+        /// </summary>
+        NetworkStream Stream { get; }
+
+        /// <summary>
         /// Установлено ли соединение с другим ендпоинтом.
         /// </summary>
         bool Connected { get; }
@@ -51,39 +56,9 @@ namespace ThinServer.TCP
         Task ConnectAsync(string hostname, int port);
 
         /// <summary>
-        /// Получить поток текущего соединения.
-        /// </summary>
-        /// <returns></returns>
-        NetworkStream GetStream();
-
-        /// <summary>
-        /// Принимает входящие данные.
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns>Количество принятых байтов.</returns>
-        int Receive(byte[] buffer);
-
-        /// <summary>
-        /// Принимает входящие данные.
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset">Место в буфере для записи данных.</param>
-        /// <param name="size">Количество байт на получение.</param>
-        /// <param name="socketFlags"></param>
-        /// <returns>Количество принятых байтов.</returns>
-        public int Receive(byte[] buffer, int offset, int size, SocketFlags socketFlags);
-
-        /// <summary>
-        /// Принимает входящие данные.
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns>Количество принятых байтов.</returns>
-        Task<int> ReceiveAsync(byte[] buffer);
-
-        /// <summary>
         /// Закрывает текущее соединение.
         /// </summary>
-        void Stop();
+        void Disconnect();
 
         /// <summary>
         /// Закрывает текущее соединение и освобождает ресурсы.
