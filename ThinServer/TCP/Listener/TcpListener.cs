@@ -35,15 +35,6 @@ namespace ThinServer.TCP
         }
 
         /// <summary>
-        /// Инициализирует нового слушателя TCP.
-        /// </summary>
-        public TcpListener()
-        {
-            _InitializeServerSocket();
-        }
-
-
-        /// <summary>
         /// Запускает прослушивание.
         /// </summary>
         public void Start()
@@ -89,13 +80,6 @@ namespace ThinServer.TCP
 
         private void _InitializeServerSocket()
         {
-            if (_localEndpoint is null)
-            {
-                _serverSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-
-                return;
-            }
-
             _serverSocket = new Socket(_localEndpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         }
 

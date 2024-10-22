@@ -6,8 +6,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ThinServer.HTTP;
+using ThinServer.HTTP.Types;
 using ThinServer.TCP;
 using HttpListener = System.Net.HttpListener;
+using HttpStatusCode = ThinServer.HTTP.Types.HttpStatusCode;
 using TcpListener = ThinServer.TCP.TcpListener;
 
 namespace Main
@@ -16,29 +18,29 @@ namespace Main
     {
         public static async Task Main(string[] args)
         {
+            IPEndPoint endpoint = new IPEndPoint(IPAddress.Any, 8080);
 
-        }
 
-        public static async Task Handle(NetworkStream stream)
-        {
-            byte[] data = new byte[1024 * 16]; // 16KB
+            IHttpListener listener = new ThinServer.HTTP.HttpListener(endpoint, new HttpSerializer());
+
+            listener.Start();
 
             while (true)
             {
-                if (stream.DataAvailable is false) continue;
+                IHttpClient connection = listener.AcceptConnection();
 
 
-                await stream.ReadAsync(data, 0, data.Length);
+                IHttpObject request = connection.GetHttp();
 
+                IHttpObject response = HttpObject.CreateResponse(
+                    HttpProtocol.Http1_1,
+                    new HttpStatusCode(200),
+                    "OK"
+                );
 
-                IHttpSerializer httpSerializer = new HttpSerializer();
+                connection.SendHttp(response);
 
-                IHttpObject httpObject = httpSerializer.ToObject(data);
-                Array.Clear(data);
-
-                string http = httpSerializer.ToHttp(httpObject);
-
-                await stream.WriteAsync(Encoding.UTF8.GetBytes(http));
+                connection.Close();
             }
         }
     }

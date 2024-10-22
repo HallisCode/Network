@@ -29,6 +29,7 @@ namespace ThinServer.HTTP
 
             _InitializeTcpServer();
         }
+        
 
         public void Start()
         {
@@ -52,12 +53,6 @@ namespace ThinServer.HTTP
 
         private void _InitializeTcpServer()
         {
-            if (_localEndpoint is null)
-            {
-                _tcpServer = new TcpListener();
-                return;
-            }
-
             _tcpServer = new TcpListener(_localEndpoint);
         }
 
