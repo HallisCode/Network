@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using Server.Logger;
 using ThinServer;
@@ -26,10 +27,12 @@ namespace Main
 
         public static Task SimpleHandler(IServerHttpRequest request)
         {
-            IHttpObject response = HttpObject.CreateResponse(HttpProtocol.Http1_1, HttpStatusCode.OK, "OK");
+            IHttpSerializer serializer = new HttpSerializer();
+            Console.WriteLine($"\n{serializer.ToHttp(request.Request)}");
 
+            IHttpObject response = HttpObject.CreateResponse(HttpProtocol.Http1_1, HttpStatusCode.OK, "OK");
             request.Response = response;
-            
+
             return Task.CompletedTask;
         }
     }

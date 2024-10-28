@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using ThinServer.TCP.Exceptions;
 
 namespace ThinServer.TCP
 {
@@ -26,12 +27,14 @@ namespace ThinServer.TCP
         /// <summary>
         /// Принимает входящее соединение.
         /// </summary>
+        /// <exception cref="ServerNotActive"></exception>
         /// <returns></returns>
         ITcpClient AcceptTcpClient();
 
         /// <summary>
         /// Принимает входящее соединение.
         /// </summary>
+        /// <exception cref="ServerNotActive"></exception>
         /// <returns></returns>
         Task<ITcpClient> AcceptTcpClientAsync();
 

@@ -1,10 +1,19 @@
 using System.Net;
 using System.Net.Sockets;
+using ThinServer.TCP.Exceptions;
 
 namespace ThinServer.TCP
 {
     public class TcpClient : ITcpClient
     {
+        // Private properties
+        private IPEndPoint? _localEndpoint;
+        private IPEndPoint? _RemoteEndpoint;
+        private Socket? _client;
+        private NetworkStream _stream;
+
+        private bool _disposed;
+
         // Public properties
         public NetworkStream Stream
         {
@@ -14,7 +23,6 @@ namespace ThinServer.TCP
 
                 if (_stream is null)
                 {
-                    
                     _stream = new NetworkStream(_client);
                 }
 
@@ -54,13 +62,6 @@ namespace ThinServer.TCP
             set { _client.SendBufferSize = value; }
         }
 
-        // Private properties
-        private IPEndPoint? _localEndpoint;
-        private IPEndPoint? _RemoteEndpoint;
-        private Socket? _client;
-        private NetworkStream _stream;
-        private bool _disposed;
-
 
         public TcpClient(Socket socket)
         {
@@ -71,7 +72,7 @@ namespace ThinServer.TCP
         {
             _localEndpoint = endPoint;
 
-            InitializeClientSocket();
+            _InitializeClientSocket();
         }
 
 
@@ -87,6 +88,8 @@ namespace ThinServer.TCP
 
         public void Disconnect()
         {
+            _VerifyActiveConnected();
+            
             _stream.Dispose();
             _client.Disconnect(true);
 
@@ -97,11 +100,11 @@ namespace ThinServer.TCP
         {
             if (Connected is false)
             {
-                throw new Exception("The connection was not established");
+                throw new ConnectionNotEstablishedException("The connection was not established.");
             }
         }
 
-        private void InitializeClientSocket()
+        private void _InitializeClientSocket()
         {
             if (_localEndpoint is null)
             {
@@ -144,22 +147,6 @@ namespace ThinServer.TCP
         ~TcpClient()
         {
             this.Dispose(false);
-        }
-    }
-
-
-    public class TcpClientException : Exception
-    {
-        public TcpClientException()
-        {
-        }
-
-        public TcpClientException(string message) : base(message)
-        {
-        }
-
-        public TcpClientException(string message, Exception inner) : base(message, inner)
-        {
         }
     }
 }

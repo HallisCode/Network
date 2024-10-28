@@ -1,4 +1,5 @@
 using System.Net;
+using ThinServer.HTTP.Exceptions;
 
 namespace ThinServer.HTTP
 {
@@ -25,12 +26,14 @@ namespace ThinServer.HTTP
         /// <summary>
         /// Принимает входящее соединение
         /// </summary>
+        /// <exception cref="ServerNotActive"></exception>
         /// <returns></returns>
         IHttpClient AcceptConnection();
 
         /// <summary>
         /// Принимает входящее соединение
         /// </summary>
+        /// <exception cref="ServerNotActive"></exception>
         /// <returns></returns>
         Task<IHttpClient> AcceptConnectionAsync();
 

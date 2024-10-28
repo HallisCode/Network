@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using ThinServer.HTTP.Exceptions;
 
 namespace ThinServer.HTTP
 {
@@ -16,14 +17,23 @@ namespace ThinServer.HTTP
         int TimeOutMilleSeconds { get; set; }
 
         /// <summary>
+        /// Размер буффера приёма данных в байтах
+        /// </summary>
+        int BufferSize { get; set; }
+
+        /// <summary>
         /// Получает http запрос.
         /// </summary>
+        /// <exception cref="BufferOverflowException">Буфер приёма данных переполнен.</exception>
+        /// <exception cref="ReceiveTimeOutException">Превышено время ожидания входящих данных.</exception>
         /// <returns></returns>
         IHttpObject GetHttp();
 
         /// <summary>
         /// Получает http запрос.
         /// </summary>
+        /// <exception cref="BufferOverflowException">Буфер приёма данных переполнен.</exception>
+        /// <exception cref="ReceiveTimeOutException">Превышено время ожидания входящих данных.</exception>
         /// <returns></returns>
         Task<IHttpObject> GetHttpAsync(CancellationToken token);
 

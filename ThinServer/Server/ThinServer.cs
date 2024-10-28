@@ -171,8 +171,9 @@ namespace ThinServer
         {
             if (_listener.Active is false) return;
 
-            _logger.LogInformation("The server has been started.");
-            _logger.LogInformation($"He's listening to the address: {_endPoint}");
+            _logger.LogInformation("The server has been started." +
+                                   "$\nHe's listening to the address: {_endPoint}\""
+            );
         }
 
         private void _InitializeServer()
@@ -208,21 +209,6 @@ namespace ThinServer
         ~ThinServer()
         {
             Dispose(false);
-        }
-    }
-
-    public class ThinServerException : Exception
-    {
-        public ThinServerException()
-        {
-        }
-
-        public ThinServerException(string message) : base(message)
-        {
-        }
-
-        public ThinServerException(string message, Exception inner) : base(message, inner)
-        {
         }
     }
 }

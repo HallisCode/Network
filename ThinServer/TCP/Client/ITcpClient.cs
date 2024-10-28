@@ -7,6 +7,7 @@ namespace ThinServer.TCP
     {
         /// <summary>
         /// Поток текущего соединения для передачи данных.
+        /// <exception cref="ConnectionNotEstablishedException"></exception>
         /// </summary>
         NetworkStream Stream { get; }
 
@@ -57,6 +58,7 @@ namespace ThinServer.TCP
 
         /// <summary>
         /// Закрывает текущее соединение.
+        /// <exception cref="ConnectionNotEstablishedException"></exception>
         /// </summary>
         void Disconnect();
 

@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using ThinServer.HTTP.Exceptions;
 using ThinServer.TCP;
 
 namespace ThinServer.HTTP
@@ -17,6 +18,7 @@ namespace ThinServer.HTTP
         }
 
         public int TimeOutMilleSeconds { get; set; } = 16000;
+        public int BufferSize { get; set; } = 1024 * 16; // 16KB
 
 
         public HttpClient(ITcpClient connection, IHttpSerializer serializer)
@@ -47,7 +49,7 @@ namespace ThinServer.HTTP
             bool isHasContentLength = false;
             int contentLengthSize = 0;
 
-            byte[] incomingData = new byte[1024 * 16]; //16KB
+            byte[] incomingData = new byte[BufferSize];
             int indexNextFree = 0;
 
             int indexBodyStart = -1;
@@ -62,7 +64,7 @@ namespace ThinServer.HTTP
 
                     if (millisecondsPassed > TimeOutMilleSeconds)
                     {
-                        throw new HttpClientException("Превышен time-out входящих данных.");
+                        throw new ReceiveTimeOutException("Превышено время ожидания входящих данных.");
                     }
 
                     await Task.Delay(128);
@@ -77,7 +79,7 @@ namespace ThinServer.HTTP
                 int availableBytesToWrite = incomingData.Length - (indexNextFree == 0 ? 0 : indexNextFree - 1);
                 if (availableBytesToWrite <= 0)
                 {
-                    throw new HttpClientException("Превышен buffer приёма данных, слишком бользой запрос.");
+                    throw new BufferOverflowException("Буфер приёма данных переполнен.");
                 }
 
                 // Записываем полученные данные
@@ -175,21 +177,6 @@ namespace ThinServer.HTTP
         ~HttpClient()
         {
             Dispose(false);
-        }
-    }
-
-    public class HttpClientException : Exception
-    {
-        public HttpClientException()
-        {
-        }
-
-        public HttpClientException(string message) : base(message)
-        {
-        }
-
-        public HttpClientException(string message, Exception inner) : base(message, inner)
-        {
         }
     }
 }

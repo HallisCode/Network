@@ -289,19 +289,4 @@ namespace ThinServer.HTTP
         /// </summary>
         public record HttpStartLine(string Argument1, string Argument2, string Argument3);
     }
-
-    public class HttpSerializerException : Exception
-    {
-        public HttpSerializerException()
-        {
-        }
-
-        public HttpSerializerException(string message) : base(message)
-        {
-        }
-
-        public HttpSerializerException(string message, Exception inner) : base(message, inner)
-        {
-        }
-    }
 }

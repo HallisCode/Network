@@ -1,4 +1,5 @@
 using System.Net;
+using ThinServer.HTTP.Exceptions;
 using ThinServer.TCP;
 
 namespace ThinServer.HTTP
@@ -29,7 +30,7 @@ namespace ThinServer.HTTP
 
             _InitializeTcpServer();
         }
-        
+
 
         public void Start()
         {
@@ -38,17 +39,29 @@ namespace ThinServer.HTTP
 
         public IHttpClient AcceptConnection()
         {
+            _VerifyActiveState();
+
             return new HttpClient(_tcpServer.AcceptTcpClient(), _httpSerializer);
         }
 
         public async Task<IHttpClient> AcceptConnectionAsync()
         {
+            _VerifyActiveState();
+
             return new HttpClient(await _tcpServer.AcceptTcpClientAsync(), _httpSerializer);
         }
 
         public void Stop()
         {
             _tcpServer.Stop();
+        }
+
+        private void _VerifyActiveState()
+        {
+            if (Active is false)
+            {
+                throw new ServerNotActive($"Server isn't active.");
+            }
         }
 
         private void _InitializeTcpServer()

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using ThinServer.TCP.Exceptions;
 
 namespace ThinServer.TCP
 {
@@ -58,23 +59,23 @@ namespace ThinServer.TCP
 
         public ITcpClient AcceptTcpClient()
         {
-            _VerifyActiveOnState();
+            _VerifyActiveState();
 
             return new TcpClient(_serverSocket.Accept());
         }
 
         public async Task<ITcpClient> AcceptTcpClientAsync()
         {
-            _VerifyActiveOnState();
+            _VerifyActiveState();
 
             return new TcpClient(await _serverSocket.AcceptAsync());
         }
 
-        private void _VerifyActiveOnState()
+        private void _VerifyActiveState()
         {
-            if (_active == false)
+            if (_active is false)
             {
-                throw new TcpListenerException($"Server isn't active to do given action.");
+                throw new ServerNotActive($"Server isn't active.");
             }
         }
 
@@ -114,21 +115,6 @@ namespace ThinServer.TCP
         ~TcpListener()
         {
             this.Dispose(false);
-        }
-    }
-
-    public class TcpListenerException : Exception
-    {
-        public TcpListenerException()
-        {
-        }
-
-        public TcpListenerException(string message) : base(message)
-        {
-        }
-
-        public TcpListenerException(string message, Exception inner) : base(message, inner)
-        {
         }
     }
 }

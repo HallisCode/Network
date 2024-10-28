@@ -5,18 +5,18 @@ namespace ThinServer
     public class ServerHttpRequest : IServerHttpRequest
     {
         // Private properties
-        private IHttpObject _request;
-        
+        private IHttpObject _response;
+
         // Public properties
-        public IHttpObject Request { get; }
         public bool IsResponseSet { get; protected set; }
+        public IHttpObject Request { get; }
 
         public IHttpObject? Response
         {
-            get => _request;
+            get => _response;
             set
             {
-                _request = value;
+                _response = value;
                 IsResponseSet = true;
             }
         }
@@ -24,7 +24,7 @@ namespace ThinServer
 
         public ServerHttpRequest(IHttpObject request)
         {
-            _request = request;
+            Request = request;
         }
     }
 }
