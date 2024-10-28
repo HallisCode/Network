@@ -94,8 +94,6 @@ namespace ThinServer.TCP
             if (disposing)
             {
                 _serverSocket.Dispose();
-
-                _active = false;
             }
 
             _disposed = true;

@@ -79,15 +79,22 @@ namespace ThinServer.HTTP
             }
 
             // Headers
-            foreach (KeyValuePair<string, string> head in httpObject.Headers)
+            if (httpObject.Headers is not null)
             {
-                httpBuilder.AppendLine($"{head.Key}: {head.Value}");
+                foreach (KeyValuePair<string, string> head in httpObject.Headers)
+                {
+                    httpBuilder.AppendLine($"{head.Key}: {head.Value}");
+                }
             }
 
-            // Разделяем body через перенос пустой строки
-            httpBuilder.AppendLine();
-            // Body
-            httpBuilder.Append(_SerializeToString(httpObject.Body));
+            if (httpObject.Body is not null)
+            {
+                // Разделяем body через перенос пустой строки
+                httpBuilder.AppendLine();
+                // Body
+                httpBuilder.Append(_SerializeToString(httpObject.Body));
+            }
+
 
             return httpBuilder.ToString();
         }
@@ -174,10 +181,12 @@ namespace ThinServer.HTTP
             string? headers;
             byte[]? body;
 
-            string[] lineSeperatedHttp = http.Split(Environment.NewLine);
 
-            startLine = lineSeperatedHttp[0];
-            if (lineSeperatedHttp.Length == 1)
+            http = http.Replace("\r\n", "\n");
+            string[] httpLines = http.Split('\n');
+
+            startLine = httpLines[0];
+            if (httpLines.Length == 1)
             {
                 return new HttpRaw(startLine);
             }
@@ -186,9 +195,9 @@ namespace ThinServer.HTTP
             StringBuilder _headers = new StringBuilder();
             StringBuilder _body = new StringBuilder();
 
-            for (int i = 1; i < lineSeperatedHttp.Length; i++)
+            for (int i = 1; i < httpLines.Length; i++)
             {
-                if (string.IsNullOrEmpty(lineSeperatedHttp[i]) && isAddingBody is false)
+                if (isAddingBody is false && string.IsNullOrEmpty(httpLines[i]))
                 {
                     isAddingBody = true;
                     continue;
@@ -196,11 +205,11 @@ namespace ThinServer.HTTP
 
                 if (isAddingBody)
                 {
-                    _body.AppendLine(lineSeperatedHttp[i]);
+                    _body.AppendLine(httpLines[i]);
                     continue;
                 }
 
-                _headers.AppendLine(lineSeperatedHttp[i]);
+                _headers.AppendLine(httpLines[i]);
             }
 
             headers = _headers.ToString();
@@ -235,7 +244,7 @@ namespace ThinServer.HTTP
         {
             if (string.IsNullOrWhiteSpace(httpRaw.Headers)) return null;
 
-            string[] headers = httpRaw.Headers.Split(Environment.NewLine);
+            string[] headers = httpRaw.Headers.Split('\n');
 
             Dictionary<string, string> _headers = new Dictionary<string, string>();
             foreach (string head in headers)

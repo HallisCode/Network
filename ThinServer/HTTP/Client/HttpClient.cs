@@ -1,107 +1,195 @@
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using ThinServer.TCP;
 
-namespace ThinServer.HTTP;
-
-public class HttpClient : IHttpClient
+namespace ThinServer.HTTP
 {
-    public NetworkStream Stream
+    public class HttpClient : IHttpClient
     {
-        get => _tcpConnection.Stream;
-    }
+        private IHttpSerializer _httpSerializer;
+        private ITcpClient _tcpConnection;
+        private bool _disposed;
 
-    private IHttpSerializer _httpSerializer;
-    private ITcpClient _tcpConnection;
-    private bool _disposed;
-
-
-    public HttpClient(ITcpClient connection, IHttpSerializer serializer)
-    {
-        _tcpConnection = connection;
-        _httpSerializer = serializer;
-    }
-
-    public IHttpObject GetHttp()
-    {
-        byte[] incomingData = new byte[1024 * 16]; //16KB
-
-        int index = 0;
-        while (Stream.DataAvailable)
+        public NetworkStream Stream
         {
-            int readBytes = Stream.Read(incomingData, index, incomingData.Length - index);
+            get => _tcpConnection.Stream;
+        }
 
-            if (readBytes == 0)
+        public int TimeOutMilleSeconds { get; set; } = 16000;
+
+
+        public HttpClient(ITcpClient connection, IHttpSerializer serializer)
+        {
+            _tcpConnection = connection;
+            _httpSerializer = serializer;
+        }
+
+        public IHttpObject GetHttp()
+        {
+            Task<IHttpObject> gettingHttp = GetHttpAsync();
+
+            gettingHttp.Wait();
+
+            return gettingHttp.Result;
+        }
+
+        public async Task<IHttpObject> GetHttpAsync(CancellationToken token = default)
+        {
+            var regexContentLength = new Regex(@"Content-Length:\s*(\d+)", RegexOptions.IgnoreCase);
+            const string seperatorCharacter = "\r\n\r\n";
+
+            DateTime lastReceive = DateTime.Now;
+
+            bool isHasSeperatingLine = false;
+            int indexSeperatingLine = -1;
+
+            bool isHasContentLength = false;
+            int contentLengthSize = 0;
+
+            byte[] incomingData = new byte[1024 * 16]; //16KB
+            int indexNextFree = 0;
+
+            int indexBodyStart = -1;
+
+            while (!token.IsCancellationRequested)
             {
-                // TODO overhead buffer for reading
+                // Если нет доступных данных на чтение
+                // -----------------------------------
+                if (!Stream.DataAvailable)
+                {
+                    double millisecondsPassed = (DateTime.Now - lastReceive).TotalMilliseconds;
+
+                    if (millisecondsPassed > TimeOutMilleSeconds)
+                    {
+                        throw new HttpClientException("Превышен time-out входящих данных.");
+                    }
+
+                    await Task.Delay(128);
+                    continue;
+                }
+
+                // Если есть доступные данные на чтение
+                // ------------------------------------
+                lastReceive = DateTime.Now;
+
+                // Проверяем доступный объем буффера приёма данных
+                int availableBytesToWrite = incomingData.Length - (indexNextFree == 0 ? 0 : indexNextFree - 1);
+                if (availableBytesToWrite <= 0)
+                {
+                    throw new HttpClientException("Превышен buffer приёма данных, слишком бользой запрос.");
+                }
+
+                // Записываем полученные данные
+                int receivedBytes = await Stream.ReadAsync(incomingData, indexNextFree, availableBytesToWrite, token);
+                indexNextFree += receivedBytes;
+
+
+                // Переводим имеющиеся данные в строковое представление
+                string requestString = Encoding.UTF8.GetString(incomingData, 0, indexNextFree);
+
+                // Проверяем на наличие разделительной строки
+                if (isHasSeperatingLine is false)
+                {
+                    isHasSeperatingLine = requestString.Contains(seperatorCharacter);
+                    indexSeperatingLine = isHasSeperatingLine ? requestString.IndexOf(seperatorCharacter) : -1;
+                }
+
+                // Проверяем на наличие тела у запроса
+                if (isHasContentLength is false)
+                {
+                    // Получаем размер body
+                    Match matchContentLength = regexContentLength.Match(requestString);
+                    if (matchContentLength.Success)
+                    {
+                        isHasContentLength = true;
+                        contentLengthSize = int.Parse(matchContentLength.Groups[1].Value);
+                    }
+                }
+
+                // Если тело присутствует и найдена разделительная строка, получаем индекс начала тела
+                if (indexBodyStart < 0 && isHasSeperatingLine && isHasContentLength)
+                {
+                    // Вычитаем -1 потому, что indexOf возвращает индекс первого символа из совпадения, таким образом
+                    // 1-ый символ уже включен в длину
+                    indexBodyStart = indexSeperatingLine + seperatorCharacter.Length - 1;
+                }
+
+
+                // Тело присутствует, все его байты записаны => http запрос полностью принят.
+                // indexNextFree -1 потому, что индекс указывает на следующий свободный байт, а мы оперируем 
+                // уже считанными данными
+                if (indexBodyStart >= 0 && (indexNextFree - 1) - indexBodyStart == contentLengthSize)
+                {
+                    break;
+                }
+
+                // Разделительная строка найдена, тело отсутствует => http запрос полностью принят.
+                if (isHasSeperatingLine && isHasContentLength is false)
+                {
+                    break;
+                }
             }
 
-            index += readBytes;
+            return _httpSerializer.ToObject(incomingData[0..indexNextFree]);
         }
 
-        return _httpSerializer.ToObject(incomingData);
-    }
-
-    public async Task<IHttpObject> GetHttpAsync()
-    {
-        byte[] incomingData = new byte[1024 * 16]; //16KB
-
-        int index = 0;
-        while (Stream.DataAvailable)
+        public void SendHttp(IHttpObject httpObject)
         {
-            int readBytes = await Stream.ReadAsync(incomingData, index, incomingData.Length - index);
+            byte[] data = Encoding.UTF8.GetBytes(_httpSerializer.ToHttp(httpObject));
 
-            if (readBytes == 0)
+            Stream.Write(data);
+        }
+
+        public async Task SendHttpAsync(IHttpObject httpObject)
+        {
+            byte[] data = Encoding.UTF8.GetBytes(_httpSerializer.ToHttp(httpObject));
+
+            await Stream.WriteAsync(data);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
             {
-                // TODO overhead buffer for reading
+                return;
             }
 
-            index += readBytes;
+            if (disposing)
+            {
+                _tcpConnection.Dispose();
+            }
         }
 
-        return _httpSerializer.ToObject(incomingData);
-    }
-
-    public void SendHttp(IHttpObject httpObject)
-    {
-        byte[] data = Encoding.UTF8.GetBytes(_httpSerializer.ToHttp(httpObject));
-
-        Stream.Write(data);
-    }
-
-    public async Task SendHttpAsync(IHttpObject httpObject)
-    {
-        byte[] data = Encoding.UTF8.GetBytes(_httpSerializer.ToHttp(httpObject));
-
-        await Stream.WriteAsync(data);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
+        public void Dispose()
         {
-            return;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
-        if (disposing)
+        public void Close()
         {
-            _tcpConnection.Dispose();
+            Dispose();
+        }
+
+        ~HttpClient()
+        {
+            Dispose(false);
         }
     }
 
-    public void Dispose()
+    public class HttpClientException : Exception
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+        public HttpClientException()
+        {
+        }
 
-    public void Close()
-    {
-        throw new NotImplementedException();
-    }
+        public HttpClientException(string message) : base(message)
+        {
+        }
 
-    ~HttpClient()
-    {
-        Dispose(false);
+        public HttpClientException(string message, Exception inner) : base(message, inner)
+        {
+        }
     }
 }

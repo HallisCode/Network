@@ -23,6 +23,11 @@ namespace ThinServer.HTTP.Types
         {
             return new HttpStatusCode(number);
         }
+
+        public static HttpStatusCode OK = new HttpStatusCode(200);
+        public static HttpStatusCode BadRequest = new HttpStatusCode(400);
+        public static HttpStatusCode NotFound = new HttpStatusCode(404);
+        public static HttpStatusCode InternalServerError = new HttpStatusCode(500);
     }
 
     public class HttpStatusCodeException : Exception

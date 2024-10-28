@@ -1,16 +1,11 @@
-﻿using System;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
+﻿using System.Net;
 using System.Threading.Tasks;
+using Server.Logger;
+using ThinServer;
 using ThinServer.HTTP;
 using ThinServer.HTTP.Types;
-using ThinServer.TCP;
-using HttpListener = System.Net.HttpListener;
 using HttpStatusCode = ThinServer.HTTP.Types.HttpStatusCode;
-using TcpListener = ThinServer.TCP.TcpListener;
+
 
 namespace Main
 {
@@ -20,28 +15,22 @@ namespace Main
         {
             IPEndPoint endpoint = new IPEndPoint(IPAddress.Any, 8080);
 
+            ILogger logger = new Logger();
+            IHttpSerializer serializer = new HttpSerializer();
 
-            IHttpListener listener = new ThinServer.HTTP.HttpListener(endpoint, new HttpSerializer());
+            IServer server = new ThinServer.ThinServer(endpoint, serializer, logger);
+            server.SetHandler(SimpleHandler);
 
-            listener.Start();
+            server.Start();
+        }
 
-            while (true)
-            {
-                IHttpClient connection = listener.AcceptConnection();
+        public static Task SimpleHandler(IServerHttpRequest request)
+        {
+            IHttpObject response = HttpObject.CreateResponse(HttpProtocol.Http1_1, HttpStatusCode.OK, "OK");
 
-
-                IHttpObject request = connection.GetHttp();
-
-                IHttpObject response = HttpObject.CreateResponse(
-                    HttpProtocol.Http1_1,
-                    new HttpStatusCode(200),
-                    "OK"
-                );
-
-                connection.SendHttp(response);
-
-                connection.Close();
-            }
+            request.Response = response;
+            
+            return Task.CompletedTask;
         }
     }
 }

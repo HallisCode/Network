@@ -5,7 +5,7 @@ using HttpMethod = ThinServer.HTTP.Types.HttpMethod;
 
 namespace ThinServer.HTTP
 {
-    public class HttpObject : IHttpObject
+    public record HttpObject : IHttpObject
     {
         public HttpMethod? Method { get; protected set; }
         public string? Message { get; protected set; }

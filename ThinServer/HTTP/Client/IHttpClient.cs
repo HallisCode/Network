@@ -11,6 +11,11 @@ namespace ThinServer.HTTP
         NetworkStream Stream { get; }
 
         /// <summary>
+        /// Тайм-аут приёма входящих данных в миллисекундах.
+        /// </summary>
+        int TimeOutMilleSeconds { get; set; }
+
+        /// <summary>
         /// Получает http запрос.
         /// </summary>
         /// <returns></returns>
@@ -20,7 +25,7 @@ namespace ThinServer.HTTP
         /// Получает http запрос.
         /// </summary>
         /// <returns></returns>
-        Task<IHttpObject> GetHttpAsync();
+        Task<IHttpObject> GetHttpAsync(CancellationToken token);
 
         /// <summary>
         /// Отправляет http запрос.
