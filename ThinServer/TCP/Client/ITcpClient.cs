@@ -6,12 +6,6 @@ namespace ThinServer.TCP
     public interface ITcpClient : IDisposable
     {
         /// <summary>
-        /// Поток текущего соединения для передачи данных.
-        /// <exception cref="ConnectionNotEstablishedException"></exception>
-        /// </summary>
-        NetworkStream Stream { get; }
-
-        /// <summary>
         /// Установлено ли соединение с другим ендпоинтом.
         /// </summary>
         bool Connected { get; }
@@ -28,7 +22,7 @@ namespace ThinServer.TCP
 
         /// <summary>
         /// Ендпоинт с которым должно быть соединение.
-        /// </summary>
+        /// </summary>C
         IPEndPoint? RemoteEndPoint { get; }
 
         /// <summary>
@@ -41,7 +35,12 @@ namespace ThinServer.TCP
         /// </summary>
         int SendBufferSize { get; set; }
 
-
+        /// <summary>
+        /// Поток текущего соединения для передачи данных.
+        /// <exception cref="ConnectionNotEstablishedException"></exception>
+        /// </summary>
+        NetworkStream GetStream();
+        
         /// <summary>
         /// Подключиться к сокету.
         /// </summary>

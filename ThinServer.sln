@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThinServer", "ThinServer\ThinServer.csproj", "{DF02702A-3A2B-402E-AADE-66E5EF5B1F53}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Main", "Main\Main.csproj", "{E4BF7BF8-A5DF-4872-976D-687A241AF843}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples", "Samples\Samples.csproj", "{E4BF7BF8-A5DF-4872-976D-687A241AF843}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

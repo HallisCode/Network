@@ -9,6 +9,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>Main</RootNamespace>
   </PropertyGroup>
 
 </Project>

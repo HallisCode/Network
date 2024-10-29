@@ -14,7 +14,7 @@ namespace ThinServer.HTTP
 
         public NetworkStream Stream
         {
-            get => _tcpConnection.Stream;
+            get => _tcpConnection.GetStream();
         }
 
         public int TimeOutMilleSeconds { get; set; } = 16000;
@@ -41,8 +41,6 @@ namespace ThinServer.HTTP
             var regexContentLength = new Regex(@"Content-Length:\s*(\d+)", RegexOptions.IgnoreCase);
             const string seperatorCharacter = "\r\n\r\n";
 
-            DateTime lastReceive = DateTime.Now;
-
             bool isHasSeperatingLine = false;
             int indexSeperatingLine = -1;
 
@@ -56,25 +54,6 @@ namespace ThinServer.HTTP
 
             while (!token.IsCancellationRequested)
             {
-                // Если нет доступных данных на чтение
-                // -----------------------------------
-                if (!Stream.DataAvailable)
-                {
-                    double millisecondsPassed = (DateTime.Now - lastReceive).TotalMilliseconds;
-
-                    if (millisecondsPassed > TimeOutMilleSeconds)
-                    {
-                        throw new ReceiveTimeOutException("Превышено время ожидания входящих данных.");
-                    }
-
-                    await Task.Delay(128);
-                    continue;
-                }
-
-                // Если есть доступные данные на чтение
-                // ------------------------------------
-                lastReceive = DateTime.Now;
-
                 // Проверяем доступный объем буффера приёма данных
                 int availableBytesToWrite = incomingData.Length - (indexNextFree == 0 ? 0 : indexNextFree - 1);
                 if (availableBytesToWrite <= 0)
@@ -82,10 +61,20 @@ namespace ThinServer.HTTP
                     throw new BufferOverflowException("Буфер приёма данных переполнен.");
                 }
 
-                // Записываем полученные данные
-                int receivedBytes = await Stream.ReadAsync(incomingData, indexNextFree, availableBytesToWrite, token);
-                indexNextFree += receivedBytes;
+                // Создаём таски на полученние данных и на time-out
+                Task<int> receiveTask = Stream.ReadAsync(incomingData, indexNextFree, availableBytesToWrite, token);
+                Task delayTask = Task.Delay(TimeOutMilleSeconds, token);
 
+                Task firstFinished = await Task.WhenAny(receiveTask, delayTask);
+
+                if (firstFinished == delayTask)
+                {
+                    throw new ReceiveTimeOutException("Превышено время ожидания входящих данных.");
+                }
+
+                // Сдвигаем индекс
+                int receivedBytes = await receiveTask;
+                indexNextFree += receivedBytes;
 
                 // Переводим имеющиеся данные в строковое представление
                 string requestString = Encoding.UTF8.GetString(incomingData, 0, indexNextFree);
@@ -142,12 +131,12 @@ namespace ThinServer.HTTP
 
             Stream.Write(data);
         }
-
-        public async Task SendHttpAsync(IHttpObject httpObject)
+        
+        public async Task SendHttpAsync(IHttpObject httpObject, CancellationToken token = default)
         {
             byte[] data = Encoding.UTF8.GetBytes(_httpSerializer.ToHttp(httpObject));
 
-            await Stream.WriteAsync(data);
+            await Stream.WriteAsync(data, token);
         }
 
         protected virtual void Dispose(bool disposing)

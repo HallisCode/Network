@@ -15,21 +15,6 @@ namespace ThinServer.TCP
         private bool _disposed;
 
         // Public properties
-        public NetworkStream Stream
-        {
-            get
-            {
-                _VerifyActiveConnected();
-
-                if (_stream is null)
-                {
-                    _stream = new NetworkStream(_client);
-                }
-
-                return _stream;
-            }
-        }
-
         public bool Connected
         {
             get => _client != null && _client.Connected;
@@ -76,6 +61,18 @@ namespace ThinServer.TCP
         }
 
 
+        public NetworkStream GetStream()
+        {
+            _VerifyActiveConnected();
+
+            if (_stream is null)
+            {
+                _stream = new NetworkStream(_client);
+            }
+
+            return _stream;
+        }
+
         public void Connect(string hostname, int port)
         {
             _client.Connect(hostname, port);
@@ -89,7 +86,7 @@ namespace ThinServer.TCP
         public void Disconnect()
         {
             _VerifyActiveConnected();
-            
+
             _stream.Dispose();
             _client.Disconnect(true);
 

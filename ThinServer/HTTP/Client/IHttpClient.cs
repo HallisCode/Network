@@ -35,7 +35,7 @@ namespace ThinServer.HTTP
         /// <exception cref="BufferOverflowException">Буфер приёма данных переполнен.</exception>
         /// <exception cref="ReceiveTimeOutException">Превышено время ожидания входящих данных.</exception>
         /// <returns></returns>
-        Task<IHttpObject> GetHttpAsync(CancellationToken token);
+        Task<IHttpObject> GetHttpAsync(CancellationToken token = default);
 
         /// <summary>
         /// Отправляет http запрос.
@@ -47,7 +47,7 @@ namespace ThinServer.HTTP
         /// Отправляет http запрос.
         /// </summary>
         /// <returns></returns>
-        Task SendHttpAsync(IHttpObject httpObject);
+        Task SendHttpAsync(IHttpObject httpObject, CancellationToken token = default);
 
         /// <summary>
         /// Закрывает текущее соединение и свобождает ресурсы.
