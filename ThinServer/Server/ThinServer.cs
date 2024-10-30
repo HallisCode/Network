@@ -55,14 +55,14 @@ namespace ThinServer
 
         public void Start()
         {
-            _Start();
+            _StartAsync();
 
             Task.WaitAny(_mainLoop);
         }
 
         public async Task StartAsync()
         {
-            _Start();
+            await _StartAsync();
         }
 
         public void Stop()
@@ -83,13 +83,13 @@ namespace ThinServer
             await _listener.StopAsync();
         }
 
-        private void _Start()
+        private Task _StartAsync()
         {
             _listener.Start();
 
             _InformStartUpInformation();
 
-            _RunMainLoop();
+            return _RunMainLoop();
         }
 
         private Task _RunMainLoop()
@@ -220,7 +220,7 @@ namespace ThinServer
             if (_listener.Active is false) return;
 
             _logger.LogInformation("The server has been started." +
-                                   "$\nHe's listening to the address: {_endPoint}\""
+                                   $"\nHe's listening to the address: {_endPoint}"
             );
         }
 
