@@ -56,7 +56,7 @@ namespace ThinServer.TCP
         
         public async Task StopAsync()
         {
-            await _serverSocket.DisconnectAsync(true);
+            _serverSocket.DisconnectAsync(true);
 
             _active = false;
         }
