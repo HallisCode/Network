@@ -160,6 +160,8 @@ namespace ThinServer
                                 message: "OK",
                                 headers: _defaultHeaders
                             );
+
+                            isRequiredCloseConnection = true;
                         }
 
                         // Отсылаем ответ
