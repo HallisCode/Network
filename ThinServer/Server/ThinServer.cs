@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Net;
 using Server.Logger;
 using ThinServer.HTTP;
@@ -26,7 +27,7 @@ namespace ThinServer
         // Logic of listening
         private IHttpListener _listener;
         private Task _mainLoop;
-        private IList<Task> _runningHandlers;
+        private IList<Task> _runningHandlers = new List<Task>();
         private CancellationTokenSource _tokenServer = new CancellationTokenSource();
 
         // Public properties
@@ -110,6 +111,8 @@ namespace ThinServer
                     // Запускаем обработчик текущего соединения.
                     Task handler = _RunConnectionHandler(connection, _tokenServer.Token);
                 }
+
+                return Task.CompletedTask;
             });
 
             return _mainLoop;
@@ -134,19 +137,6 @@ namespace ThinServer
                         await _handler.Invoke(serverHttpRequest);
 
 
-                        bool isRequestHasConnectionHeader = _TryGetValueHeader(
-                            request, "Connection", out string? requestConnectionStatus
-                        );
-                        bool isResponseHasConnectionHeader = _TryGetValueHeader(
-                            request, "Connection", out string? responseConnectionStatus
-                        );
-
-                        if ((isRequestHasConnectionHeader && requestConnectionStatus.ToLower() == "close") ||
-                            (isResponseHasConnectionHeader && responseConnectionStatus.ToLower() == "close"))
-                        {
-                            isRequiredCloseConnection = true;
-                        }
-
                         IHttpObject response = null;
                         if (serverHttpRequest.Response is not null)
                         {
@@ -160,7 +150,18 @@ namespace ThinServer
                                 message: "OK",
                                 headers: _defaultHeaders
                             );
+                        }
 
+                        bool isRequestHasConnectionHeader = _TryGetValueHeader(
+                            request, "Connection", out string? requestConnectionStatus
+                        );
+                        bool isResponseHasConnectionHeader = _TryGetValueHeader(
+                            response, "Connection", out string? responseConnectionStatus
+                        );
+
+                        if ((isRequestHasConnectionHeader && requestConnectionStatus.ToLower() == "close") ||
+                            (isResponseHasConnectionHeader && responseConnectionStatus.ToLower() == "close"))
+                        {
                             isRequiredCloseConnection = true;
                         }
 
@@ -211,7 +212,7 @@ namespace ThinServer
 
 
             string? _headerName = httpObject.Headers.Keys.FirstOrDefault(
-                key => key.ToLower() == headerName, null
+                key => key.ToLower() == headerName.ToLower(), null
             );
 
             if (_headerName is not null)

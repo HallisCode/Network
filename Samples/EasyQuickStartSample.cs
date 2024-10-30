@@ -31,9 +31,6 @@ namespace Main
             Dictionary<string, string> defaultHeaders = new Dictionary<string, string>();
             defaultHeaders.Add("Connection", "close");
 
-            IHttpSerializer serializer = new HttpSerializer();
-            Console.WriteLine($"\n{serializer.ToHttp(request.Request)}");
-
             IHttpObject response = HttpObject.CreateResponse(
                 HttpProtocol.Http1_1,
                 HttpStatusCode.OK,
