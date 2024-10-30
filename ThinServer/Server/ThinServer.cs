@@ -17,7 +17,11 @@ namespace ThinServer
         private bool _disposed;
         private IPEndPoint? _endPoint;
         private Func<IServerHttpRequest, Task> _handler;
-        private Dictionary<string, string> _defaultHeaders = new Dictionary<string, string>(); // default headers
+
+        private Dictionary<string, string> _defaultHeaders = new Dictionary<string, string>()
+        {
+            { "Connection", "close" }
+        }; // default headers
 
         // Logic of listening
         private IHttpListener _listener;
@@ -125,22 +129,10 @@ namespace ThinServer
                         IHttpObject request = await connection.GetHttpAsync(token);
                         IServerHttpRequest serverHttpRequest = new ServerHttpRequest(request);
 
-                        IHttpObject response = null;
-                        if (_handler is not null)
-                        {
-                            // Вызываем определенный извне обработчик
-                            await _handler.Invoke(serverHttpRequest);
-                            response = serverHttpRequest.Response;
-                        }
-                        else
-                        {
-                            response = HttpObject.CreateResponse(
-                                HttpProtocol.Http1_1,
-                                HttpStatusCode.OK,
-                                "Ok",
-                                _defaultHeaders
-                            );
-                        }
+
+                        // Вызываем определенный извне обработчик
+                        await _handler.Invoke(serverHttpRequest);
+
 
                         bool isRequestHasConnectionHeader = _TryGetValueHeader(
                             request, "Connection", out string? requestConnectionStatus
@@ -155,8 +147,23 @@ namespace ThinServer
                             isRequiredCloseConnection = true;
                         }
 
+                        IHttpObject response = null;
+                        if (serverHttpRequest.Response is not null)
+                        {
+                            response = serverHttpRequest.Response;
+                        }
+                        else
+                        {
+                            response = HttpObject.CreateResponse(
+                                protocol: HttpProtocol.Http1_1,
+                                code: HttpStatusCode.OK,
+                                message: "OK",
+                                headers: _defaultHeaders
+                            );
+                        }
+
                         // Отсылаем ответ
-                        await connection.SendHttpAsync(serverHttpRequest.Response);
+                        await connection.SendHttpAsync(response);
                     }
                 }
                 catch (Exception exception)
@@ -227,13 +234,6 @@ namespace ThinServer
         private void _InitializeServer()
         {
             _listener = new HttpListener(_endPoint, _serializer);
-
-            _InitializeDefaultHeaders();
-        }
-
-        private void _InitializeDefaultHeaders()
-        {
-            _defaultHeaders.Add("Connection", "close");
         }
 
         protected virtual void Dispose(bool disposing)
