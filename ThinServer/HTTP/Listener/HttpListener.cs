@@ -55,6 +55,11 @@ namespace ThinServer.HTTP
         {
             _tcpServer.Stop();
         }
+        
+        public async Task StopAsync()
+        {
+            await _tcpServer.StopAsync();
+        }
 
         private void _VerifyActiveState()
         {

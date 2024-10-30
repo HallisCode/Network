@@ -46,13 +46,17 @@ namespace ThinServer.TCP
 
             _active = true;
         }
-
-        /// <summary>
-        /// Остановливает прослушивание.
-        /// </summary>
+        
         public void Stop()
         {
             _serverSocket.Disconnect(true);
+
+            _active = false;
+        }
+        
+        public async Task StopAsync()
+        {
+            await _serverSocket.DisconnectAsync(true);
 
             _active = false;
         }

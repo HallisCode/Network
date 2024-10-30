@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Server.Logger;
@@ -27,10 +28,18 @@ namespace Main
 
         public static Task SimpleHandler(IServerHttpRequest request)
         {
+            Dictionary<string, string> defaultHeaders = new Dictionary<string, string>();
+            defaultHeaders.Add("Connection", "close");
+
             IHttpSerializer serializer = new HttpSerializer();
             Console.WriteLine($"\n{serializer.ToHttp(request.Request)}");
 
-            IHttpObject response = HttpObject.CreateResponse(HttpProtocol.Http1_1, HttpStatusCode.OK, "OK");
+            IHttpObject response = HttpObject.CreateResponse(
+                HttpProtocol.Http1_1,
+                HttpStatusCode.OK,
+                "OK",
+                defaultHeaders
+            );
             request.Response = response;
 
             return Task.CompletedTask;

@@ -31,14 +31,19 @@ namespace ThinServer
         void Start();
 
         /// <summary>
-        /// Завершает работу сервера.
-        /// </summary>
-        void Stop();
-
-        /// <summary>
         /// Запускает работу сервера
         /// </summary>
         Task StartAsync();
+        
+        /// <summary>
+        /// Завершает работу сервера.
+        /// </summary>
+        void Stop();
+        
+        /// <summary>
+        /// Завершает работу сервера.
+        /// </summary>
+        Task StopAsync();
 
         /// <summary>
         /// Завершает работу сервера, освобождая ресурсы.

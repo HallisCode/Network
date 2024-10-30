@@ -60,16 +60,27 @@ namespace ThinServer
             Task.WaitAny(_mainLoop);
         }
 
+        public async Task StartAsync()
+        {
+            _Start();
+        }
+
         public void Stop()
         {
             _tokenServer.Cancel();
 
+            Task.WaitAll(_runningHandlers.ToArray());
+
             _listener.Stop();
         }
 
-        public async Task StartAsync()
+        public async Task StopAsync()
         {
-            _Start();
+            _tokenServer.Cancel();
+
+            await Task.WhenAll(_runningHandlers);
+
+            await _listener.StopAsync();
         }
 
         private void _Start()
