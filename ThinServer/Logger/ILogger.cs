@@ -1,4 +1,4 @@
-namespace Server.Logger
+namespace ThinServer.Logger
 {
     public interface ILogger
     {

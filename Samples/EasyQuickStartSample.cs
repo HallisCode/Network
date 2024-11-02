@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using Server.Logger;
+using ThinServer.Logger;
 using ThinServer;
 using ThinServer.HTTP;
 using ThinServer.HTTP.Types;

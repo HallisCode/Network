@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Net;
-using Server.Logger;
+using ThinServer.Logger;
 using ThinServer.HTTP;
 using ThinServer.HTTP.Types;
 using HttpListener = ThinServer.HTTP.HttpListener;
@@ -28,7 +28,7 @@ namespace ThinServer
         private IHttpListener _listener;
         private Task _mainLoop;
         private IList<Task> _runningHandlers = new List<Task>();
-        private CancellationTokenSource _tokenServer = new CancellationTokenSource();
+        private CancellationTokenSource _tokenServer;
 
         // Public properties
         public int TimeOutMilleSeconds { get; set; } = 16000;
@@ -134,7 +134,10 @@ namespace ThinServer
 
 
                         // Вызываем определенный извне обработчик
-                        await _handler.Invoke(serverHttpRequest);
+                        if (_handler is not null)
+                        {
+                            await _handler?.Invoke(serverHttpRequest);
+                        }
 
 
                         IHttpObject response = null;
