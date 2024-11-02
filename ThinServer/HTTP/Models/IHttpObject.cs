@@ -25,6 +25,6 @@ namespace ThinServer.HTTP
 
         ReadOnlyDictionary<string, string>? Headers { get; }
 
-        ReadOnlyCollection<byte>? Body { get; }
+        ReadOnlyCollection<byte> Body { get; }
     }
 }

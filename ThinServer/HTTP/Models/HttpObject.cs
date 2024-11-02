@@ -20,11 +20,11 @@ namespace ThinServer.HTTP
         protected HttpObject
         (
             Dictionary<string, string>? headers = null,
-            byte[] body = null
+            byte[]? body = null
         )
         {
-            Headers = headers is null ? null : headers.AsReadOnly();
-            Body = body is null ? null : body.AsReadOnly();
+            Headers = headers is null ? new Dictionary<string,string>().AsReadOnly() : headers.AsReadOnly();
+            Body = body is null ? Array.Empty<byte>().AsReadOnly() : body.AsReadOnly();
         }
 
         public static HttpObject CreateRequest
@@ -32,8 +32,8 @@ namespace ThinServer.HTTP
             HttpMethod method,
             string url,
             HttpProtocol protocol,
-            Dictionary<string, string> headers = null,
-            byte[] body = null
+            Dictionary<string, string>? headers = null,
+            byte[]? body = null
         )
         {
             return new HttpObject(headers, body)
@@ -51,8 +51,8 @@ namespace ThinServer.HTTP
             HttpProtocol protocol,
             HttpStatusCode code,
             string message,
-            Dictionary<string, string> headers = null,
-            byte[] body = null
+            Dictionary<string, string>? headers = null,
+            byte[]? body = null
         )
         {
             return new HttpObject(headers, body)
