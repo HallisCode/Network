@@ -28,7 +28,7 @@ namespace ThinServer
         private IHttpListener _listener;
         private Task _mainLoop;
         private IList<Task> _runningHandlers = new List<Task>();
-        private CancellationTokenSource _tokenServer;
+        private CancellationTokenSource _tokenServer = new CancellationTokenSource();
 
         // Public properties
         public int TimeOutMilleSeconds { get; set; } = 16000;
