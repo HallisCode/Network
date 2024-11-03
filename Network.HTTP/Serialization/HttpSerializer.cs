@@ -76,7 +76,7 @@ namespace Network.HTTP.Serialization
             else
             {
                 httpBuilder.AppendLine($"{httpObject.Protocol} " +
-                                       $"{httpObject.Code} " +
+                                       $"{(int)httpObject.Code!} " +
                                        $"{httpObject.Message}");
             }
 
