@@ -12,7 +12,7 @@ namespace Network.ThinServer
     public class ThinServer : IServer
     {
         // DI elements
-        private ILogger _logger;
+        private ILogger<ThinServer> _logger;
 
         // Logic of statements and settings
         private bool _disposed;
@@ -43,7 +43,7 @@ namespace Network.ThinServer
         }
 
 
-        public ThinServer(IHttpListener listener, ILogger logger)
+        public ThinServer(IHttpListener listener, ILogger<ThinServer> logger)
         {
             _listener = listener;
             _logger = logger;

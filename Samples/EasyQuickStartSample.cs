@@ -28,7 +28,7 @@ namespace Main
             
             // Инициализируем сервер
             ILoggerFactory loggerFactory = LoggerFactory.Create(config => config.AddConsole());
-            ILogger logger = loggerFactory.CreateLogger<Network.ThinServer.ThinServer>();
+            ILogger<Network.ThinServer.ThinServer> logger = loggerFactory.CreateLogger<Network.ThinServer.ThinServer>();
             
             IServer server = new Network.ThinServer.ThinServer(httpListener, logger);
             server.SetHandler(SimpleHandler);
