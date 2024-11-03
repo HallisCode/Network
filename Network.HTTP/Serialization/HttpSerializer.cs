@@ -113,13 +113,14 @@ namespace Network.HTTP.Serialization
             string url;
             HttpProtocol protocol;
 
-            bool isMethod = Enum.TryParse(typeof(HttpMethod), startLine.Argument1, true, out object _method);
-            if (isMethod is false)
+            try
+            {
+                method = HttpMethod.Parse(startLine.Argument1);
+            }
+            catch (Exception exception)
             {
                 throw new SerializationException($"Неизвестный http метод <{startLine.Argument1}>");
             }
-
-            method = (HttpMethod)_method;
 
             url = startLine.Argument2;
 
