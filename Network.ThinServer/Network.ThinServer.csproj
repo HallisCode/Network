@@ -1,20 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>disable</ImplicitUsings>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Main</RootNamespace>
+    <RootNamespace>Server</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-  
 
   <ItemGroup>
     <ProjectReference Include="..\Network.Core\Network.Core.csproj" />
     <ProjectReference Include="..\Network.HTTP\Network.HTTP.csproj" />
-    <ProjectReference Include="..\Network.TCP\Network.TCP.csproj" />
-    <ProjectReference Include="..\Network.ThinServer\Network.ThinServer.csproj" />
   </ItemGroup>
 
 </Project>

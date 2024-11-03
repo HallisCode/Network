@@ -1,13 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using ThinServer.Logger;
-using ThinServer;
-using ThinServer.HTTP;
-using ThinServer.HTTP.Types;
-using HttpStatusCode = ThinServer.HTTP.Types.HttpStatusCode;
-
+using Network.Core.HTTP;
+using Network.Core.HTTP.Serialization.Exceptions;
+using Network.Core.HTTP.Types;
+using Network.Core.Server;
+using Network.Core.Server.Models;
+using Network.HTTP.Serialization;
+using Network.TCP;
+using Network.ThinServer.Logger;
+using ThinServer.TCP;
+using HttpListener = Network.HTTP.HttpListener;
 
 namespace Main
 {
@@ -18,9 +21,15 @@ namespace Main
             IPEndPoint endpoint = new IPEndPoint(IPAddress.Any, 8080);
 
             ILogger logger = new Logger();
-            IHttpSerializer serializer = new HttpSerializer();
+            IHttpSerializer httpSerializer = new HttpSerializer();
 
-            IServer server = new ThinServer.ThinServer(endpoint, serializer, logger);
+            // Инициализируем tcp listener
+            ITcpListener tcpListener = new TcpListener(endpoint);
+
+            // Инициализируем http listener
+            IHttpListener httpListener = new HttpListener(httpSerializer, tcpListener);
+
+            IServer server = new Network.ThinServer.ThinServer(httpListener, logger);
             server.SetHandler(SimpleHandler);
 
             server.Start();
