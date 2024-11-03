@@ -16,5 +16,10 @@
     <ProjectReference Include="..\Network.TCP\Network.TCP.csproj" />
     <ProjectReference Include="..\Network.ThinServer\Network.ThinServer.csproj" />
   </ItemGroup>
+  
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0-rc.2.24473.5" />
+  </ItemGroup>
 
 </Project>

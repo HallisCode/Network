@@ -1,10 +1,10 @@
 using System.Net;
+using Microsoft.Extensions.Logging;
 using Network.Core.HTTP;
 using Network.Core.HTTP.Types;
 using Network.Core.Server;
 using Network.Core.Server.Models;
 using Network.HTTP.Serialization;
-using Network.ThinServer.Logger;
 using Network.ThinServer.Models;
 
 namespace Network.ThinServer
