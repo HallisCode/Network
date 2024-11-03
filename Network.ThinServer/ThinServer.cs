@@ -1,6 +1,5 @@
 using System.Net;
 using Network.Core.HTTP;
-using Network.Core.HTTP.Serialization.Exceptions;
 using Network.Core.HTTP.Types;
 using Network.Core.Server;
 using Network.Core.Server.Models;
@@ -13,12 +12,10 @@ namespace Network.ThinServer
     public class ThinServer : IServer
     {
         // DI elements
-        private IHttpSerializer _serializer;
         private ILogger _logger;
 
         // Logic of statements and settings
         private bool _disposed;
-        private IPEndPoint? _endPoint;
         private Func<IServerHttpRequest, Task> _handler;
 
         private Dictionary<string, string> _defaultHeaders = new Dictionary<string, string>()
@@ -42,7 +39,7 @@ namespace Network.ThinServer
 
         public IPEndPoint EndPoint
         {
-            get => _endPoint;
+            get => _listener.LocalEndpoint;
         }
 
 
@@ -148,7 +145,7 @@ namespace Network.ThinServer
                         {
                             response = HttpObject.CreateResponse(
                                 protocol: HttpProtocol.Http1_1,
-                                code: HttpStatusCode.OK,
+                                code: HttpStatusCode.NoContent,
                                 message: "OK",
                                 headers: _defaultHeaders
                             );
@@ -232,7 +229,7 @@ namespace Network.ThinServer
             if (_listener.Active is false) return;
 
             _logger.LogInformation("The server has been started." +
-                                   $"\nHe's listening to the address: {_endPoint}"
+                                   $"\nHe's listening to the address: {EndPoint}"
             );
         }
 
